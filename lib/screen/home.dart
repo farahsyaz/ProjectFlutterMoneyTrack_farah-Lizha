@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:lapor_keuangan/screen/edit.dart';
+import 'package:lapor_keuangan/screen/add_transaction.dart';
 import 'package:lapor_keuangan/screen/login.dart';
-import 'package:lapor_keuangan/screen/tambah.dart';
 import 'package:lapor_keuangan/db/hive_helper.dart';
+import 'package:lapor_keuangan/model/transaction_model.dart';
 
 class Myhome extends StatefulWidget {
-  const Myhome({Key? key}) : super(key: key);
+  const Myhome({super.key});
 
   @override
   State<Myhome> createState() => _MyhomeState();
 }
 
 class _MyhomeState extends State<Myhome> {
-  List<Map<String, dynamic>> transactions = [];
+  List<TransactionModel> transactions = [];
   double totalSaldo = 0.0;
   double totalPengeluaran = 0.0;
 
@@ -33,18 +33,19 @@ class _MyhomeState extends State<Myhome> {
     double saldo = 0.0;
     double pengeluaran = 0.0;
 
-    for (var transaction in transactions) {
-      if (transaction['type'] == 'income') {
-        saldo += transaction['amount'];
-      } else if (transaction['type'] == 'expense') {
-        pengeluaran += transaction['amount'];
-      }
+   for (var transaction in transactions) {
+    // Menggunakan dot notation (transaction.type) bukan index map (transaction['type'])
+    if (transaction.type == 'income') {
+      saldo += (transaction.amount ?? 0.0);
+    } else if (transaction.type == 'expense') {
+      pengeluaran += (transaction.amount ?? 0.0);
     }
+  }
 
-    setState(() {
-      totalSaldo = saldo - pengeluaran; // Hitung saldo akhir
-      totalPengeluaran = pengeluaran; // Total pengeluaran
-    });
+  setState(() {
+    totalSaldo = saldo - pengeluaran;
+    totalPengeluaran = pengeluaran;
+  });
   }
 
   void _deleteTransaction(int index) {
@@ -55,7 +56,7 @@ class _MyhomeState extends State<Myhome> {
 
   void showAlertDialog(BuildContext context, int index) {
     Widget okButton = TextButton(
-      child: Text("Yakin"),
+      child: const Text("Yakin"),
       onPressed: () {
         Navigator.of(context).pop(); // Tutup dialog
         _deleteTransaction(index); // Hapus transaksi
@@ -63,15 +64,15 @@ class _MyhomeState extends State<Myhome> {
     );
 
     Widget cancelButton = TextButton(
-      child: Text("Batal"),
+      child: const Text("Batal"),
       onPressed: () {
         Navigator.of(context).pop(); // Tutup dialog
       },
     );
 
     AlertDialog alertDialog = AlertDialog(
-      title: Text("Peringatan!"),
-      content: Text("Anda yakin akan menghapus transaksi ini?"),
+      title: const Text("Peringatan!"),
+      content: const Text("Anda yakin akan menghapus transaksi ini?"),
       actions: [
         cancelButton,
         okButton,
@@ -91,10 +92,10 @@ class _MyhomeState extends State<Myhome> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.amber,
-        title: Text("Guardado Plus"),
+        title: const Text("Guardado Plus"),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout), // Ikon logout
+            icon: const Icon(Icons.logout), // Ikon logout
             onPressed: () {
               // Fungsi logout, misalnya menghapus sesi pengguna atau memindahkan ke halaman login
               // Misalnya, jika menggunakan Hive untuk menyimpan status login, Anda bisa menghapus data login.
@@ -130,7 +131,7 @@ class _MyhomeState extends State<Myhome> {
             const SizedBox(height: 20),
             Expanded(
               child: transactions.isEmpty
-                  ? Center(
+                  ? const Center(
                       child: Text(
                         "Tidak ada transaksi",
                         style: TextStyle(fontSize: 18, color: Colors.grey),
@@ -152,7 +153,7 @@ class _MyhomeState extends State<Myhome> {
           // Navigasi ke halaman Tambahsaldo dan tunggu hasilnya
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Tambahsaldo()),
+            MaterialPageRoute(builder: (context) => const AddTransactionPage()),
           );
 
           // Jika ada perubahan data (result == true), muat ulang transaksi
@@ -160,8 +161,8 @@ class _MyhomeState extends State<Myhome> {
             _loadTransactions();
           }
         },
-        child: const Icon(Icons.add),
         tooltip: 'Lakukan Transaksi',
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -187,44 +188,43 @@ class _MyhomeState extends State<Myhome> {
     );
   }
 
-  Widget _buildTransactionTile(Map<String, dynamic> transaction, int index) {
-    return ListTile(
-      title: Text(transaction['name']),
-      subtitle: Text("Rp.${transaction['amount']}"),
-      leading: Icon(
-        transaction['type'] == 'income' ? Icons.download : Icons.upload,
-        color: transaction['type'] == 'income' ? Colors.green : Colors.red,
-      ),
-      trailing: Wrap(
-        children: [
-          IconButton(
-            onPressed: () {
-              // Mengirim data transaksi yang dipilih ke halaman EditTransaksi
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditTransaksi(
-                    index: index,
-                    keterangan: transaction['name'],
-                    jumlah: transaction['amount'],
-                    tipe: transaction['type'],
-                  ),
+  Widget _buildTransactionTile(TransactionModel transaction, int index) {
+  return ListTile(
+    // Menggunakan properti object (description, amount, type)
+    title: Text(transaction.description ?? 'Tanpa Keterangan'),
+    subtitle: Text("Rp ${transaction.amount?.toStringAsFixed(0)}"),
+    leading: Icon(
+      transaction.type == 'income' ? Icons.download : Icons.upload,
+      color: transaction.type == 'income' ? Colors.green : Colors.red,
+    ),
+    trailing: Wrap(
+      children: [
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditTransaksi(
+                  index: index,
+                  keterangan: transaction.description ?? '',
+                  jumlah: transaction.amount ?? 0.0,
+                  tipe: transaction.type ?? 'expense',
                 ),
-              ).then((_) {
-                // Muat ulang transaksi setelah perubahan
-                _loadTransactions();
-              });
-            },
-            icon: Icon(Icons.edit, color: Colors.grey),
-          ),
-          IconButton(
-            onPressed: () {
-              showAlertDialog(context, index);
-            },
-            icon: Icon(Icons.delete, color: Colors.red),
-          ),
-        ],
-      ),
-    );
+              ),
+            ).then((_) {
+              _loadTransactions();
+            });
+          },
+          icon: const Icon(Icons.edit, color: Colors.grey),
+        ),
+        IconButton(
+          onPressed: () {
+            showAlertDialog(context, index);
+          },
+          icon: const Icon(Icons.delete, color: Colors.red),
+        ),
+      ],
+    ),
+  );
   }
 }

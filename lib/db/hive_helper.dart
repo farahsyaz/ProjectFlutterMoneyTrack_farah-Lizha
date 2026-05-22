@@ -1,81 +1,62 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lapor_keuangan/model/user_model.dart';
+import 'package:lapor_keuangan/model/transaction_model.dart';
 
 class HiveHelper {
-  static const String _transactionsBoxName = "transactions";
-  static const String _usersBoxName = "users"; // Box baru untuk pengguna
+  static const String _userBox = 'users';
+  static const String _transactionBox = 'transactions';
 
-  // Inisialisasi Hive dan membuka box
   static Future<void> initHive() async {
     await Hive.initFlutter();
-    await Hive.openBox<Map>(_transactionsBoxName); // Box untuk transaksi
-    await Hive.openBox<Map>(_usersBoxName); // Box untuk pengguna
+
+    // Register adapters
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(UserModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(TransactionModelAdapter());
+    }
+
+    // Open boxes
+    await Hive.openBox<UserModel>(_userBox);
+    await Hive.openBox<TransactionModel>(_transactionBox);
   }
 
-  // Mendapatkan Box untuk transaksi
-  static Box<Map> getTransactionsBox() => Hive.box<Map>(_transactionsBoxName);
-
-  // Mendapatkan Box untuk pengguna
-  static Box<Map> getUsersBox() => Hive.box<Map>(_usersBoxName);
-
-  // Fungsi untuk menambahkan transaksi
-  static Future<void> addTransaction(
-      String name, int amount, String type) async {
-    final box = getTransactionsBox();
-    await box.add({'name': name, 'amount': amount, 'type': type});
+  // ── USER ──────────────────────────────────────────
+  static Future<void> saveUser(UserModel user) async {
+    final box = Hive.box<UserModel>(_userBox);
+    await box.add(user);
   }
 
-  // Fungsi untuk mendapatkan daftar transaksi
-  static List<Map<String, dynamic>> getTransactions() {
-    final box = getTransactionsBox();
-    return box.values.map((e) => Map<String, dynamic>.from(e)).toList();
-  }
-
-  // Fungsi untuk menghapus transaksi
-  static Future<void> deleteTransaction(int index) async {
-    final box = getTransactionsBox();
-    await box.deleteAt(index);
-  }
-
-  // Fungsi untuk mengupdate transaksi
-  static Future<void> updateTransaction(
-      int index, String name, int amount, String type) async {
-    final box = getTransactionsBox();
-
-    var transaction = box.getAt(index);
-    if (transaction != null) {
-      transaction['name'] = name;
-      transaction['amount'] = amount;
-      transaction['type'] = type;
-      await box.putAt(index, transaction);
+  static UserModel? getUser(String email, String password) {
+    final box = Hive.box<UserModel>(_userBox);
+    try {
+      return box.values.firstWhere(
+        (u) => u.email == email && u.password == password,
+      );
+    } catch (_) {
+      return null;
     }
   }
 
-  // Fungsi untuk menambahkan pengguna
-  static Future<void> addUser(String username, String password) async {
-    final box = getUsersBox();
-    await box.add({'username': username, 'password': password});
+  static bool userExists(String email) {
+    final box = Hive.box<UserModel>(_userBox);
+    return box.values.any((u) => u.email == email);
   }
 
-  // Fungsi untuk mendapatkan daftar pengguna
-  static List<Map<String, dynamic>> getUsers() {
-    final box = getUsersBox();
-    return box.values.map((e) => Map<String, dynamic>.from(e)).toList();
+  // ── TRANSACTIONS ──────────────────────────────────
+  static Future<void> saveTransaction(TransactionModel t) async {
+    final box = Hive.box<TransactionModel>(_transactionBox);
+    await box.add(t);
   }
 
-  // Fungsi untuk menghapus pengguna
-  static Future<void> deleteUser(int index) async {
-    final box = getUsersBox();
+  static List<TransactionModel> getTransactions() {
+    final box = Hive.box<TransactionModel>(_transactionBox);
+    return box.values.toList().reversed.toList();
+  }
+
+  static Future<void> deleteTransaction(int index) async {
+    final box = Hive.box<TransactionModel>(_transactionBox);
     await box.deleteAt(index);
-  }
-
-  // Fungsi untuk memverifikasi login pengguna
-  static bool verifyLogin(String username, String password) {
-    final box = getUsersBox();
-    final users = box.values
-        .map((e) => Map<String, dynamic>.from(e))
-        .where((user) =>
-            user['username'] == username && user['password'] == password)
-        .toList();
-    return users.isNotEmpty; // Mengembalikan true jika ada kecocokan
   }
 }

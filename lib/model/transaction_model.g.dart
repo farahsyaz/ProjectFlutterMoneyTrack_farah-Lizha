@@ -1,38 +1,44 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_model.dart';
+part of 'transaction_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class UserModelAdapter extends TypeAdapter<UserModel> {
+class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
   @override
-  final int typeId = 0;
+  final int typeId = 1;
 
   @override
-  UserModel read(BinaryReader reader) {
+  TransactionModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return UserModel(
-      name: fields[0] as String?,
-      email: fields[1] as String?,
-      password: fields[2] as String?,
+    return TransactionModel(
+      type: fields[0] as String?,
+      amount: fields[1] as double?,
+      category: fields[2] as String?,
+      description: fields[3] as String?,
+      date: fields[4] as String?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, UserModel obj) {
+  void write(BinaryWriter writer, TransactionModel obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(5)
       ..writeByte(0)
-      ..write(obj.name)
+      ..write(obj.type)
       ..writeByte(1)
-      ..write(obj.email)
+      ..write(obj.amount)
       ..writeByte(2)
-      ..write(obj.password);
+      ..write(obj.category)
+      ..writeByte(3)
+      ..write(obj.description)
+      ..writeByte(4)
+      ..write(obj.date);
   }
 
   @override
@@ -41,7 +47,7 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserModelAdapter &&
+      other is TransactionModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

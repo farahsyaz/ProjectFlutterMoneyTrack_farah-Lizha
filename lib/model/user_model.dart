@@ -2,16 +2,20 @@ import 'package:hive/hive.dart';
 
 part 'user_model.g.dart';
 
-@HiveType(typeId: 0) // Gunakan typeId yang unik untuk Hive
-class User {
+@HiveType(typeId: 0)
+class UserModel extends HiveObject {
   @HiveField(0)
-  final String username;
+  String? name;
 
   @HiveField(1)
-  final String email;
+  String? email;
 
   @HiveField(2)
-  final String password;
+  String? password;
 
-  User({required this.username, required this.email, required this.password});
+  UserModel({
+    this.name,
+    this.email,
+    this.password,
+  });
 }

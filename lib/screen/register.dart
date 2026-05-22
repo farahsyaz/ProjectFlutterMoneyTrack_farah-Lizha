@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:lapor_keuangan/theme/app_theme.dart';
-import 'package:lapor_keuangan/screen/register.dart';
+import 'package:lapor_keuangan/screen/login.dart';
 import 'package:lapor_keuangan/screen/dashboard.dart';
 import 'package:lapor_keuangan/db/hive_helper.dart';
+import 'package:lapor_keuangan/model/user_model.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
+class _RegisterPageState extends State<RegisterPage>
     with SingleTickerProviderStateMixin {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
+  final _confirmPassController = TextEditingController();
   bool _obscure = true;
+  bool _obscureConfirm = true;
   bool _loading = false;
   String? _error;
 
@@ -38,12 +42,25 @@ class _LoginPageState extends State<LoginPage>
   @override
   void dispose() {
     _animController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     _passController.dispose();
+    _confirmPassController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _register() async {
+    if (_nameController.text.trim().isEmpty ||
+        _emailController.text.trim().isEmpty ||
+        _passController.text.trim().isEmpty) {
+      setState(() => _error = 'Semua kolom harus diisi.');
+      return;
+    }
+    if (_passController.text != _confirmPassController.text) {
+      setState(() => _error = 'Password tidak cocok.');
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
@@ -52,18 +69,19 @@ class _LoginPageState extends State<LoginPage>
     await Future.delayed(const Duration(milliseconds: 600));
 
     try {
-      final user = HiveHelper.getUser(
-          _emailController.text.trim(), _passController.text.trim());
-      if (user != null) {
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (_) => DashboardPage(username: user.name ?? 'Pengguna')),
-        );
-      } else {
-        setState(() => _error = 'Email atau password salah.');
-      }
+      final user = UserModel(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passController.text.trim(),
+      );
+      await HiveHelper.saveUser(user);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => DashboardPage(username: user.name ?? 'Pengguna')),
+      );
     } catch (e) {
       setState(() => _error = 'Terjadi kesalahan. Coba lagi.');
     } finally {
@@ -77,28 +95,28 @@ class _LoginPageState extends State<LoginPage>
       backgroundColor: AppColors.offWhite,
       body: Stack(
         children: [
-          // Top gradient blob
+          // Decorative blobs
           Positioned(
-            top: -80,
-            right: -80,
+            top: -60,
+            left: -60,
             child: Container(
-              width: 240,
-              height: 240,
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.18),
+                color: AppColors.accent.withOpacity(0.4),
               ),
             ),
           ),
           Positioned(
-            top: 40,
-            left: -40,
+            top: 80,
+            right: -50,
             child: Container(
-              width: 140,
-              height: 140,
+              width: 160,
+              height: 160,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.accent.withOpacity(0.35),
+                color: AppColors.primary.withOpacity(0.15),
               ),
             ),
           ),
@@ -113,7 +131,6 @@ class _LoginPageState extends State<LoginPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 32),
-                      // Back button
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(
@@ -129,9 +146,8 @@ class _LoginPageState extends State<LoginPage>
                         ),
                       ),
                       const SizedBox(height: 36),
-                      // Header
                       const Text(
-                        'Selamat\nDatang Kembali 👋',
+                        'Buat Akun\nBaru ✨',
                         style: TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.w800,
@@ -142,15 +158,14 @@ class _LoginPageState extends State<LoginPage>
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Masuk untuk melanjutkan pantau keuanganmu',
+                        'Mulai kelola keuanganmu hari ini, gratis!',
                         style: TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 14,
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      const SizedBox(height: 40),
-                      // Form card
+                      const SizedBox(height: 36),
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
@@ -167,6 +182,18 @@ class _LoginPageState extends State<LoginPage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            _buildLabel('Nama Lengkap'),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _nameController,
+                              style: const TextStyle(
+                                  fontFamily: 'Poppins', fontSize: 14),
+                              decoration: _inputDeco(
+                                hint: 'Budi Santoso',
+                                icon: Icons.person_outline,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
                             _buildLabel('Email'),
                             const SizedBox(height: 8),
                             TextFormField(
@@ -179,7 +206,7 @@ class _LoginPageState extends State<LoginPage>
                                 icon: Icons.email_outlined,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 16),
                             _buildLabel('Password'),
                             const SizedBox(height: 8),
                             TextFormField(
@@ -188,7 +215,7 @@ class _LoginPageState extends State<LoginPage>
                               style: const TextStyle(
                                   fontFamily: 'Poppins', fontSize: 14),
                               decoration: _inputDeco(
-                                hint: '••••••••',
+                                hint: 'Min. 8 karakter',
                                 icon: Icons.lock_outline,
                                 suffix: IconButton(
                                   icon: Icon(
@@ -203,27 +230,32 @@ class _LoginPageState extends State<LoginPage>
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 16),
+                            _buildLabel('Konfirmasi Password'),
                             const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {},
-                                style: TextButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    minimumSize: Size.zero),
-                                child: const Text(
-                                  'Lupa password?',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Poppins',
+                            TextFormField(
+                              controller: _confirmPassController,
+                              obscureText: _obscureConfirm,
+                              style: const TextStyle(
+                                  fontFamily: 'Poppins', fontSize: 14),
+                              decoration: _inputDeco(
+                                hint: 'Ulangi password',
+                                icon: Icons.lock_outline,
+                                suffix: IconButton(
+                                  icon: Icon(
+                                    _obscureConfirm
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: AppColors.textMuted,
+                                    size: 20,
                                   ),
+                                  onPressed: () => setState(
+                                      () => _obscureConfirm = !_obscureConfirm),
                                 ),
                               ),
                             ),
                             if (_error != null) ...[
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 14, vertical: 10),
@@ -236,12 +268,14 @@ class _LoginPageState extends State<LoginPage>
                                     const Icon(Icons.error_outline,
                                         color: AppColors.danger, size: 16),
                                     const SizedBox(width: 8),
-                                    Text(
-                                      _error!,
-                                      style: const TextStyle(
-                                        color: AppColors.danger,
-                                        fontSize: 12,
-                                        fontFamily: 'Poppins',
+                                    Expanded(
+                                      child: Text(
+                                        _error!,
+                                        style: const TextStyle(
+                                          color: AppColors.danger,
+                                          fontSize: 12,
+                                          fontFamily: 'Poppins',
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -253,7 +287,7 @@ class _LoginPageState extends State<LoginPage>
                               width: double.infinity,
                               height: 52,
                               child: ElevatedButton(
-                                onPressed: _loading ? null : _login,
+                                onPressed: _loading ? null : _register,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: AppColors.white,
@@ -270,7 +304,7 @@ class _LoginPageState extends State<LoginPage>
                                             strokeWidth: 2),
                                       )
                                     : const Text(
-                                        'Masuk',
+                                        'Buat Akun',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w700,
@@ -282,42 +316,27 @@ class _LoginPageState extends State<LoginPage>
                           ],
                         ),
                       ),
-                      const SizedBox(height: 28),
-                      // Social login
-                      Row(
-                        children: [
-                          Expanded(
-                              child: Divider(color: AppColors.divider,
-                                  thickness: 1)),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              'atau lanjutkan dengan',
-                              style: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 12,
-                                  fontFamily: 'Poppins'),
-                            ),
+                      const SizedBox(height: 12),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(
+                          'Dengan mendaftar, kamu menyetujui Syarat & Ketentuan dan Kebijakan Privasi kami.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11,
+                            fontFamily: 'Poppins',
+                            height: 1.5,
                           ),
-                          Expanded(
-                              child: Divider(
-                                  color: AppColors.divider, thickness: 1)),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 20),
-                      _SocialButton(
-                        icon: Icons.g_mobiledata,
-                        label: 'Google',
-                        onTap: () {},
-                      ),
-                      const SizedBox(height: 32),
-                      // Register link
+                      const SizedBox(height: 28),
                       Center(
                         child: GestureDetector(
                           onTap: () => Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const RegisterPage()),
+                                builder: (_) => const LoginPage()),
                           ),
                           child: RichText(
                             text: const TextSpan(
@@ -325,11 +344,11 @@ class _LoginPageState extends State<LoginPage>
                                   fontFamily: 'Poppins', fontSize: 13),
                               children: [
                                 TextSpan(
-                                    text: 'Belum punya akun? ',
+                                    text: 'Sudah punya akun? ',
                                     style:
                                         TextStyle(color: AppColors.textMuted)),
                                 TextSpan(
-                                  text: 'Daftar sekarang',
+                                  text: 'Masuk',
                                   style: TextStyle(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.w700,
@@ -388,47 +407,6 @@ class _LoginPageState extends State<LoginPage>
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _SocialButton(
-      {required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.divider),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.dark, size: 22),
-            const SizedBox(width: 10),
-            Text(
-              'Lanjutkan dengan $label',
-              style: const TextStyle(
-                color: AppColors.dark,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
