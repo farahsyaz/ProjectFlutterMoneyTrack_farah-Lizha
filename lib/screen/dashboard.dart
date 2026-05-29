@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lapor_keuangan/theme/app_theme.dart';
 import 'package:lapor_keuangan/screen/add_transaction.dart';
 import 'package:lapor_keuangan/db/hive_helper.dart';
@@ -67,8 +68,7 @@ class _DashboardPageState extends State<DashboardPage>
               onPressed: () async {
                 await Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const AddTransactionPage()),
+                  MaterialPageRoute(builder: (_) => const AddTransactionPage()),
                 );
                 _loadTransactions();
               },
@@ -218,8 +218,8 @@ class _DashboardPageState extends State<DashboardPage>
                       fontSize: 11,
                       fontFamily: 'Poppins'),
                   underline: const SizedBox(),
-                  icon:
-                      const Icon(Icons.keyboard_arrow_down, color: AppColors.light, size: 16),
+                  icon: const Icon(Icons.keyboard_arrow_down,
+                      color: AppColors.light, size: 16),
                   items: ['Bulan Ini', '3 Bulan', 'Tahun Ini']
                       .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                       .toList(),
@@ -249,7 +249,10 @@ class _DashboardPageState extends State<DashboardPage>
                 color: AppColors.success,
               ),
               const SizedBox(width: 16),
-              Container(width: 1, height: 40, color: AppColors.white.withOpacity(0.15)),
+              Container(
+                  width: 1,
+                  height: 40,
+                  color: AppColors.white.withOpacity(0.15)),
               const SizedBox(width: 16),
               _BalanceStat(
                 label: 'Pengeluaran',
@@ -265,13 +268,47 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildChartCard() {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
-    // Demo data — in a real app these would come from grouped transactions
-    final incomeData = [3200000, 4100000, 2800000, 5000000, 3700000, totalIncome.toInt()];
-    final expenseData = [2100000, 3000000, 2200000, 3800000, 2500000, totalExpense.toInt()];
-    final maxVal = [...incomeData, ...expenseData]
-        .reduce((a, b) => a > b ? a : b)
-        .toDouble();
+    // 1. Siapkan data untuk 6 bulan terakhir
+    final now = DateTime.now();
+    final List<String> months = [];
+    final List<double> incomeData = List.filled(6, 0.0);
+    final List<double> expenseData = List.filled(6, 0.0);
+
+    // Ambil label bulan (contoh: Jan, Feb, Mar)
+    for (int i = 5; i >= 0; i--) {
+      final monthDate = DateTime(now.year, now.month - i, 1);
+      months.add(DateFormat('MMM', 'id_ID').format(monthDate));
+    }
+
+    // 2. Hitung total pemasukan & pengeluaran per bulan dari _transactions
+    for (var t in _transactions) {
+      if (t.date != null) {
+        try {
+          // Parse tanggal transaksi (Format: dd MMM yyyy)
+          final tDate = DateFormat('dd MMM yyyy', 'id_ID').parse(t.date!);
+
+          // Hitung selisih bulan dari sekarang
+          int monthDiff =
+              (now.year - tDate.year) * 12 + now.month - tDate.month;
+
+          // Jika transaksi terjadi dalam 6 bulan terakhir, masukkan ke grafik
+          if (monthDiff >= 0 && monthDiff < 6) {
+            int index = 5 - monthDiff;
+            if (t.type == 'income') {
+              incomeData[index] += t.amount ?? 0;
+            } else if (t.type == 'expense') {
+              expenseData[index] += t.amount ?? 0;
+            }
+          }
+        } catch (e) {
+          // Abaikan jika format tanggal salah
+        }
+      }
+    }
+
+    // 3. Cari nilai maksimal untuk tinggi grafik
+    final maxVal =
+        [...incomeData, ...expenseData].fold(0.0, (a, b) => a > b ? a : b);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
@@ -312,12 +349,12 @@ class _DashboardPageState extends State<DashboardPage>
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(months.length, (i) {
-                final incomeH = maxVal > 0
-                    ? (incomeData[i] / maxVal) * 130
-                    : 20.0;
-                final expenseH = maxVal > 0
-                    ? (expenseData[i] / maxVal) * 130
-                    : 20.0;
+                // Hitung tinggi bar proporsional (maksimal 130)
+                final incomeH =
+                    maxVal > 0 ? (incomeData[i] / maxVal) * 130 : 20.0;
+                final expenseH =
+                    maxVal > 0 ? (expenseData[i] / maxVal) * 130 : 20.0;
+
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -859,8 +896,7 @@ class _ChartLegend extends StatelessWidget {
         Container(
             width: 10,
             height: 10,
-            decoration:
-                BoxDecoration(color: color, shape: BoxShape.circle)),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
         Text(label,
             style: const TextStyle(
@@ -931,7 +967,9 @@ class _TransactionTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.description ?? transaction.category ?? 'Transaksi',
+                  transaction.description ??
+                      transaction.category ??
+                      'Transaksi',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
@@ -1020,8 +1058,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 color: selected ? AppColors.primary : AppColors.textMuted,
                 fontSize: 10,
-                fontWeight:
-                    selected ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                 fontFamily: 'Poppins',
               ),
             ),
@@ -1105,8 +1142,7 @@ class _ProfileMenuItem extends StatelessWidget {
               ),
             ),
             if (!isDestructive)
-              Icon(Icons.chevron_right,
-                  color: AppColors.textMuted, size: 20),
+              Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20),
           ],
         ),
       ),
