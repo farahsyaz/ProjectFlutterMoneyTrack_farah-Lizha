@@ -5,7 +5,13 @@ import 'package:lapor_keuangan/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await HiveHelper.initHive();
+
+  try {
+    await HiveHelper.initHive();
+  } catch (e) {
+    debugPrint("Error inisialisasi Hive: $e");
+  }
+
   runApp(const MyApp());
 }
 
