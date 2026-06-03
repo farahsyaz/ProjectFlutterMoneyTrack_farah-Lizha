@@ -28,6 +28,7 @@ class _DashboardPageState extends State<DashboardPage>
   double get totalExpense => _transactions
       .where((t) => t.type == 'expense')
       .fold(0.0, (sum, t) => sum + (t.amount ?? 0));
+      
 
   double get balance => totalIncome - totalExpense;
 
@@ -321,7 +322,7 @@ class _DashboardPageState extends State<DashboardPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
