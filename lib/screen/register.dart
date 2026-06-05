@@ -5,6 +5,7 @@ import 'package:lapor_keuangan/screen/dashboard.dart';
 import 'package:lapor_keuangan/db/hive_helper.dart';
 import 'package:lapor_keuangan/model/user_model.dart';
 
+
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 

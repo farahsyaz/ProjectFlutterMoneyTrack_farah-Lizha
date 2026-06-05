@@ -184,7 +184,7 @@ class _DashboardPageState extends State<DashboardPage>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.dark.withOpacity(0.35),
+            color: AppColors.dark.withValues(alpha: 0.35),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
@@ -784,7 +784,19 @@ class _DashboardPageState extends State<DashboardPage>
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: AppColors.textMuted.withOpacity(0.5)),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.textMuted.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.textMuted.withValues(alpha: 0.9),
+              size: 24,
+            ),
+          ),
           const SizedBox(height: 12),
           Text(
             text,
@@ -800,6 +812,7 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
+
 
   String _formatCurrency(double val) {
     final abs = val.abs();
@@ -820,6 +833,7 @@ class _DashboardPageState extends State<DashboardPage>
 // ──────────────────────────────────────────────────────────────────
 
 class _BalanceStat extends StatelessWidget {
+
   final String label;
   final String value;
   final IconData icon;
