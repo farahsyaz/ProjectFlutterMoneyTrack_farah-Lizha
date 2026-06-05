@@ -74,14 +74,14 @@ class AppTheme {
         labelStyle: const TextStyle(color: AppColors.textMuted),
         hintStyle: const TextStyle(color: AppColors.textMuted),
       ),
-      cardTheme: CardTheme(
-        color: AppColors.cardBg,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.divider),
-        ),
-      ),
+      cardTheme: CardThemeData(
+  color: AppColors.cardBg,
+  elevation: 0,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(16),
+    side: const BorderSide(color: AppColors.divider),
+  ),
+),
     );
   }
 }
