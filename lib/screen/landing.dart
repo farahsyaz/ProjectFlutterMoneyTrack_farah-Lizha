@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lapor_keuangan/theme/app_theme.dart';
+
 import 'package:lapor_keuangan/screen/login.dart';
 import 'package:lapor_keuangan/screen/register.dart';
 
@@ -86,11 +86,11 @@ class LK {
   // Shadows
   static List<BoxShadow> get cardShadow => [
         BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.06),
+color: const Color(0xFF0F172A).withValues(alpha: 0.06),
             blurRadius: 24,
             offset: const Offset(0, 8)),
         BoxShadow(
-            color: const Color(0xFF0F172A).withOpacity(0.03),
+color: const Color(0xFF0F172A).withValues(alpha: 0.03),
             blurRadius: 6,
             offset: const Offset(0, 2)),
       ];
@@ -242,10 +242,10 @@ class _LandingPageState extends State<LandingPage>
             top: -80,
             child: _Blob(size: 260, color: LK.primary.withOpacity(0.12)),
           ),
-          Positioned(
+Positioned(
             left: -40,
             bottom: 80,
-            child: _Blob(size: 180, color: LK.amber.withOpacity(0.2)),
+            child: _Blob(size: 180, color: LK.amber.withValues(alpha: 0.2)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 52, 24, 0),
@@ -262,7 +262,7 @@ class _LandingPageState extends State<LandingPage>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 6),
                           decoration: BoxDecoration(
-                            color: LK.primary.withOpacity(0.12),
+color: LK.primary.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                                 color: LK.primary.withOpacity(0.25),

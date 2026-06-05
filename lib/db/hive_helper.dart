@@ -1,5 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lapor_keuangan/model/user_model.dart';
+
 import 'package:lapor_keuangan/model/transaction_model.dart';
 
 class HiveHelper {
